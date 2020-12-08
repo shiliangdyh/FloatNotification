@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">悬浮通知</string>
+    <string name="accessibility_service_description">请开启</string>
+</resources>
