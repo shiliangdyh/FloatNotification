@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                     .setCustomBigContentView(getContentView(true))
                     .setContent(getSmallContentView())
                     .setCustomContentView(getSmallContentView())
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setChannelId(mChannel.getId())
                     .build();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
                     .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
                     .setCustomBigContentView(getContentView(true))
                     .setCustomContentView(getContentView(false))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setPriority(Integer.MAX_VALUE)
                     .build();
         } else {
             notification = new NotificationCompat.Builder(this, id)
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                     .setSmallIcon(R.mipmap.ic_lan)
                     .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
                     .setContent(getContentView(false))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
                     .build();
         }
 
