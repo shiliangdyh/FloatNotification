@@ -34,6 +34,7 @@ public class ListeningService extends AccessibilityService {
 //        setServiceInfo(config);
     }
 
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         AccessibilityNodeInfo nodeInfo = event.getSource();//当前界面的可访问节点信息
@@ -46,6 +47,7 @@ public class ListeningService extends AccessibilityService {
                 accessibilityEvent.getPackageName().equals("com.android.systemui") &&
                 (accessibilityEvent.getClassName().equals("com.android.systemui.statusbar.phone.PhoneStatusBa‌​r$ExpandedDialog") || accessibilityEvent.getClassName().equals("android.widget.FrameLayout") || accessibilityEvent.getClassName().equals("com.android.systemui.statusbar.StatusBarSe‌​rvice$ExpandedDialog"))) {
             // 你的代码
+            App.isShowTongzhiLan = true;
             IFloatWindow floatWindow = FloatWindow.get();
 //                floatWindow.show();
             if (floatWindow != null) {
@@ -68,6 +70,10 @@ public class ListeningService extends AccessibilityService {
                 }).translationYBy(-MainActivity.measuredHeight).setDuration(500).setInterpolator(new DecelerateInterpolator(3));
             }
 
+        }else if (accessibilityEvent.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+                accessibilityEvent.getPackageName().equals("android") &&
+                (accessibilityEvent.getClassName().equals("android.view.View"))){
+            App.isShowTongzhiLan = false;
         }
     }
 

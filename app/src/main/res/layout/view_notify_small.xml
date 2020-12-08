@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/title"
-        android:text="女子扔垃圾，发现一个废弃的红色背包，打开一看..."
+        android:text="女子扔垃圾，发现一个废弃的红色背包发现一个废弃的红色背包，打开一看..."
         android:textSize="16sp"
         android:textColor="#333"
         android:layout_marginBottom="5dp"
@@ -20,8 +20,9 @@
         android:id="@+id/image"
         android:src="@mipmap/a1"
         android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="0dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -10,6 +10,7 @@ import android.util.Log;
 import cn.bmob.v3.Bmob;
 
 public class App extends Application {
+    public static boolean isShowTongzhiLan;
     private static final String TAG = "App";
     @Override
     public void onCreate() {

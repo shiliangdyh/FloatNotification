@@ -95,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFloat() {
+        if (App.isShowTongzhiLan){
+            return;
+        }
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         View view = inflater.inflate(R.layout.floating_window_layout, null);
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
@@ -202,7 +205,8 @@ public class MainActivity extends AppCompatActivity {
                     .setWhen(System.currentTimeMillis())
                     .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
                     .setCustomBigContentView(getContentView(true))
-                    .setCustomContentView(getContentView(true))
+                    .setContent(getSmallContentView())
+                    .setCustomContentView(getSmallContentView())
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setChannelId(mChannel.getId())
                     .build();
@@ -232,6 +236,34 @@ public class MainActivity extends AppCompatActivity {
         showFloat();
     }
 
+    private RemoteViews getSmallContentView() {
+        int layout = -1;
+        layout = R.layout.view_notify_small;
+        RemoteViews mRemoteViews = new RemoteViews(getPackageName(), layout);
+//        if (logoBitmap != null) {
+//        }
+//        mRemoteViews.setImageViewResource(R.id.iv_logo, R.mipmap.ic_launcher);
+//        mRemoteViews.setTextViewText(R.id.content, "content");
+//        mRemoteViews.setTextViewText(R.id.tv_title, "app名字");
+//        mRemoteViews.setTextViewText(R.id.title, "title");
+//        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getClickPendingIntent());
+
+        if (imageBitmap != null) {
+
+            mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
+        }
+        NotificationCompatColor.AutomationUse(this)
+                .setContentTitleColor(mRemoteViews, R.id.title)
+                .setContentTitleSize(mRemoteViews, R.id.title)
+//                .setContentTextSize(mRemoteViews, R.id.content)
+//                .setContentTextColor(mRemoteViews, R.id.content)
+//                .setTitleColor(mRemoteViews, R.id.title)
+//                .setTitleSize(mRemoteViews, R.id.title)
+
+        ;
+        return mRemoteViews;
+    }
+
     /**
      * 获取自定义通知栏view
      *
@@ -255,12 +287,12 @@ public class MainActivity extends AppCompatActivity {
             mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
         }
         NotificationCompatColor.AutomationUse(this)
-//                .setContentTitleColor(mRemoteViews, R.id.title)
-//                .setContentTitleSize(mRemoteViews, R.id.title)
+                .setContentTitleColor(mRemoteViews, R.id.title)
+                .setContentTitleSize(mRemoteViews, R.id.title)
 //                .setContentTextSize(mRemoteViews, R.id.content)
 //                .setContentTextColor(mRemoteViews, R.id.content)
-                .setTitleColor(mRemoteViews, R.id.title)
-                .setTitleSize(mRemoteViews, R.id.title)
+//                .setTitleColor(mRemoteViews, R.id.title)
+//                .setTitleSize(mRemoteViews, R.id.title)
 
         ;
         return mRemoteViews;
