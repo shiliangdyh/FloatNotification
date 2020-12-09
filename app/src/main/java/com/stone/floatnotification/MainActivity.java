@@ -246,6 +246,13 @@ public class MainActivity extends AppCompatActivity {
      */
     public void showNotification() {
 
+
+        updateNotify();
+
+        showFloat();
+    }
+
+    private void updateNotify() {
         String id = "channel_demo";
         Notification notification = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -258,11 +265,11 @@ public class MainActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(mChannel);
             notification = new NotificationCompat.Builder(this, id)
                     .setSmallIcon(R.mipmap.ic_lan)
-                    .setWhen(System.currentTimeMillis())
+                    .setWhen(0)
                     .setCustomBigContentView(getContentView(R.layout.view_notify_big))
                     .setContent(getContentView(R.layout.view_notify_small))
                     .setCustomContentView(getContentView(R.layout.view_notify_small))
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setPriority(NotificationCompat.PRIORITY_MIN)
                     .setChannelId(mChannel.getId())
                     .build();
             notification.flags = Notification.FLAG_AUTO_CANCEL;
@@ -273,9 +280,12 @@ public class MainActivity extends AppCompatActivity {
 
         notificationManager.notify(NOTIFICATION_ID, notification);
 
-
-
-        showFloat();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                updateNotify();
+            }
+        }, 50);
     }
 
     /**
