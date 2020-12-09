@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 def versionName(){
-    return "1.0.2"
+    return "1.0.3"
 }
 android {
     compileSdkVersion 29
@@ -11,7 +11,7 @@ android {
         applicationId "com.stone.floatnotification"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 102
+        versionCode 103
         versionName versionName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
