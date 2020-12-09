@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        FloatWindow.destroy();
         super.onCreate(savedInstanceState);
         appCompatActivity = this;
         setContentView(R.layout.activity_main);
@@ -108,6 +109,12 @@ public class MainActivity extends AppCompatActivity {
 //        addNotification();
 
 
+        findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                start();
+            }
+        });
     }
 
 
@@ -145,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 intent.setData(Uri.parse(notificationBean.getJumpUrl()));
                 startActivity(intent);
                 FloatWindow.destroy();
+                notificationManager.cancel(NOTIFICATION_ID);
             }
         });
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
@@ -302,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setAction("com.stone.close");
         PendingIntent pendingIntentClick0 = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return pendingIntentClick0;
     }
 
@@ -311,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
         Uri content_url = Uri.parse(notificationBean.getDownloadUrl());
         intent.setData(content_url);
         PendingIntent pendingIntentClick0 = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return pendingIntentClick0;
     }
 
@@ -319,36 +329,33 @@ public class MainActivity extends AppCompatActivity {
         intent.setAction("android.intent.action.VIEW");
         Uri content_url = Uri.parse(notificationBean.getJumpUrl());
         intent.setData(content_url);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntentClick0 = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return pendingIntentClick0;
+    }
+
+    public void start(){
+        notificationManager.cancel(NOTIFICATION_ID);
+        FloatWindow.destroy();
+        moveTaskToBack(false);
+        BmobQuery<FloatNotification> notificationBeanBmobQuery = new BmobQuery<>();
+        notificationBeanBmobQuery.findObjects(new FindListener<FloatNotification>() {
+            @Override
+            public void done(List<FloatNotification> list, BmobException e) {
+                LogUtils.d(TAG, "done: ");
+                if (list != null && !list.isEmpty()) {
+                    notificationBean = list.get(0);
+                    LogUtils.d(TAG, "done: " + notificationBean.toString());
+                    handler.sendEmptyMessageDelayed(0, notificationBean.getDelayTime());
+                }
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (!isAccessibilitySettingsOn(this, ListeningService.class.getCanonicalName())) {
-            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } else {
-            Intent intent = new Intent(this, ListeningService.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startService(intent);
 
-            BmobQuery<FloatNotification> notificationBeanBmobQuery = new BmobQuery<>();
-            notificationBeanBmobQuery.findObjects(new FindListener<FloatNotification>() {
-                @Override
-                public void done(List<FloatNotification> list, BmobException e) {
-                    LogUtils.d(TAG, "done: ");
-                    if (list != null && !list.isEmpty()) {
-                        notificationBean = list.get(0);
-                        LogUtils.d(TAG, "done: " + notificationBean.toString());
-                        handler.sendEmptyMessageDelayed(0, notificationBean.getDelayTime());
-                    }
-                }
-            });
-
-        }
 //        showNotification();
     }
 
