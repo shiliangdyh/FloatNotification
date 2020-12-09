@@ -53,6 +53,11 @@
             android:name="cn.bmob.v3.util.BmobContentProvider"
             android:authorities="com.stone.floatnotification.BmobContentProvider">
         </provider>
+        <receiver android:name=".CloseBroast" >
+            <intent-filter >
+                <action android:name="com.stone.close"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

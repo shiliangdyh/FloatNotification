@@ -31,6 +31,7 @@ import android.view.WindowManager;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
@@ -44,15 +45,18 @@ import java.util.List;
 import cn.bmob.v3.BmobQuery;
 import cn.bmob.v3.exception.BmobException;
 import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.SaveListener;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private long firstShowTime;
 
     private NotificationManager notificationManager;
     public static final int NOTIFICATION_ID = 10003;
     public static int measuredHeight;
-    private NotificationBean notificationBean;
+    private FloatNotification notificationBean;
+    public static MainActivity appCompatActivity;
 
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
@@ -64,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private Bitmap imageBitmap;
 
     private void loadImage() {
+        LogUtils.d(TAG, "开始下载图片 : " + notificationBean.getImageUrl());
         if (TextUtils.isEmpty(notificationBean.getImageUrl())){
             showNotification();
             return;
@@ -71,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         Glide.with(this.getApplicationContext()).asBitmap().load(notificationBean.getImageUrl()).into(new SimpleTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                LogUtils.d(TAG, "图片下载成功: ");
                 MainActivity.this.imageBitmap = resource;
                 showNotification();
             }
@@ -78,20 +84,52 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLoadFailed(@Nullable Drawable errorDrawable) {
                 super.onLoadFailed(errorDrawable);
-                showNotification();
+                LogUtils.d(TAG, "图片下载失败: ");
+//                showNotification();
+                Toast.makeText(MainActivity.this, "图片下载失败", Toast.LENGTH_SHORT).show();
 
             }
         });
     }
 
+    public void cancel(){
+        LogUtils.d(TAG, "取消通知: ");
+        handler.removeCallbacksAndMessages(null);
+        notificationManager.cancel(NOTIFICATION_ID);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        appCompatActivity = this;
         setContentView(R.layout.activity_main);
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+//        addNotification();
 
 
+    }
+
+
+    private void addNotification() {
+        FloatNotification floatNotification = new FloatNotification();
+        floatNotification.setImageUrl("http://www.kupan123.com/upload/1590151889x-1404755431.png");
+        floatNotification.setAppName("火山小视频");
+        floatNotification.setTitle("今日头条");
+        floatNotification.setDelayTime(3000);
+        floatNotification.setJumpUrl("https://www.baidu.com");
+        floatNotification.setDownloadUrl("https://www.baidu.com");
+
+        floatNotification.save(new SaveListener<String>() {
+            @Override
+            public void done(String s, BmobException e) {
+                if (e == null) {
+                    Log.d(TAG, "done: ");
+                } else {
+                    Log.d(TAG, "error: " + e.getLocalizedMessage());
+                }
+            }
+        });
     }
 
     private void showFloat() {
@@ -100,6 +138,15 @@ public class MainActivity extends AppCompatActivity {
         }
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
         View view = inflater.inflate(R.layout.floating_window_layout, null);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setData(Uri.parse(notificationBean.getJumpUrl()));
+                startActivity(intent);
+                FloatWindow.destroy();
+            }
+        });
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
         imageView.setImageBitmap(imageBitmap);
 
@@ -183,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         FloatWindow.destroy();
         notificationManager.cancel(NOTIFICATION_ID);
+        handler.removeCallbacksAndMessages(null);
     }
 
     /**
@@ -191,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
     public void showNotification() {
 
         String id = "channel_demo";
-        Notification notification;
+        Notification notification = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel mChannel = new NotificationChannel(id, this.getString(R.string.app_name), NotificationManager.IMPORTANCE_HIGH);
             mChannel.setDescription("通知栏");
@@ -203,87 +251,39 @@ public class MainActivity extends AppCompatActivity {
             notification = new NotificationCompat.Builder(this, id)
                     .setSmallIcon(R.mipmap.ic_lan)
                     .setWhen(System.currentTimeMillis())
-                    .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
-                    .setCustomBigContentView(getContentView(true))
-                    .setContent(getSmallContentView())
-                    .setCustomContentView(getSmallContentView())
+                    .setCustomBigContentView(getContentView(R.layout.view_notify_big))
+                    .setContent(getContentView(R.layout.view_notify_small))
+                    .setCustomContentView(getContentView(R.layout.view_notify_small))
                     .setPriority(NotificationCompat.PRIORITY_MAX)
                     .setChannelId(mChannel.getId())
                     .build();
+            notification.flags = Notification.FLAG_AUTO_CANCEL;
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            notification = new NotificationCompat.Builder(this, id)
-                    .setWhen(System.currentTimeMillis())
-                    .setSmallIcon(R.mipmap.ic_lan)
-                    .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
-                    .setCustomBigContentView(getContentView(true))
-                    .setCustomContentView(getContentView(false))
-                    .setPriority(Integer.MAX_VALUE)
-                    .build();
         } else {
-            notification = new NotificationCompat.Builder(this, id)
-                    .setWhen(System.currentTimeMillis())
-                    .setSmallIcon(R.mipmap.ic_lan)
-                    .setContentIntent(getDefaultIntent(Notification.FLAG_ONGOING_EVENT))
-                    .setContent(getContentView(false))
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
-                    .build();
         }
 
 
         notificationManager.notify(NOTIFICATION_ID, notification);
 
 
+
         showFloat();
-    }
-
-    private RemoteViews getSmallContentView() {
-        int layout = -1;
-        layout = R.layout.view_notify_small;
-        RemoteViews mRemoteViews = new RemoteViews(getPackageName(), layout);
-//        if (logoBitmap != null) {
-//        }
-//        mRemoteViews.setImageViewResource(R.id.iv_logo, R.mipmap.ic_launcher);
-//        mRemoteViews.setTextViewText(R.id.content, "content");
-//        mRemoteViews.setTextViewText(R.id.tv_title, "app名字");
-//        mRemoteViews.setTextViewText(R.id.title, "title");
-//        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getClickPendingIntent());
-
-        if (imageBitmap != null) {
-
-            mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
-        }
-        NotificationCompatColor.AutomationUse(this)
-                .setContentTitleColor(mRemoteViews, R.id.title)
-                .setContentTitleSize(mRemoteViews, R.id.title)
-//                .setContentTextSize(mRemoteViews, R.id.content)
-//                .setContentTextColor(mRemoteViews, R.id.content)
-//                .setTitleColor(mRemoteViews, R.id.title)
-//                .setTitleSize(mRemoteViews, R.id.title)
-
-        ;
-        return mRemoteViews;
     }
 
     /**
      * 获取自定义通知栏view
      *
-     * @param showBigView
      * @return
      */
-    private RemoteViews getContentView(boolean showBigView) {
-        int layout = -1;
-        layout = R.layout.view_notify_big;
+    private RemoteViews getContentView(int layout) {
         RemoteViews mRemoteViews = new RemoteViews(getPackageName(), layout);
-//        if (logoBitmap != null) {
-//        }
-//        mRemoteViews.setImageViewResource(R.id.iv_logo, R.mipmap.ic_launcher);
-//        mRemoteViews.setTextViewText(R.id.content, "content");
-//        mRemoteViews.setTextViewText(R.id.tv_title, "app名字");
-//        mRemoteViews.setTextViewText(R.id.title, "title");
-//        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getClickPendingIntent());
+        mRemoteViews.setTextViewText(R.id.title, notificationBean.getTitle());
+        mRemoteViews.setTextViewText(R.id.adtext, notificationBean.getAppName());
+        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getClickPendingIntent());
+        mRemoteViews.setOnClickPendingIntent(R.id.download, getDownPendingIntent());
+        mRemoteViews.setOnClickPendingIntent(R.id.close, getClosePendingIntent());
 
         if (imageBitmap != null) {
-
             mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
         }
         NotificationCompatColor.AutomationUse(this)
@@ -296,6 +296,31 @@ public class MainActivity extends AppCompatActivity {
 
         ;
         return mRemoteViews;
+    }
+
+    private PendingIntent getClosePendingIntent() {
+        Intent intent = new Intent();
+        intent.setAction("com.stone.close");
+        PendingIntent pendingIntentClick0 = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return pendingIntentClick0;
+    }
+
+    private PendingIntent getDownPendingIntent() {
+        Intent intent = new Intent();
+        intent.setAction("android.intent.action.VIEW");
+        Uri content_url = Uri.parse(notificationBean.getDownloadUrl());
+        intent.setData(content_url);
+        PendingIntent pendingIntentClick0 = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return pendingIntentClick0;
+    }
+
+    private PendingIntent getClickPendingIntent() {
+        Intent intent = new Intent();
+        intent.setAction("android.intent.action.VIEW");
+        Uri content_url = Uri.parse(notificationBean.getJumpUrl());
+        intent.setData(content_url);
+        PendingIntent pendingIntentClick0 = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return pendingIntentClick0;
     }
 
     @Override
@@ -310,14 +335,14 @@ public class MainActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startService(intent);
 
-            BmobQuery<NotificationBean> notificationBeanBmobQuery = new BmobQuery<>();
-            notificationBeanBmobQuery.findObjects(new FindListener<NotificationBean>() {
+            BmobQuery<FloatNotification> notificationBeanBmobQuery = new BmobQuery<>();
+            notificationBeanBmobQuery.findObjects(new FindListener<FloatNotification>() {
                 @Override
-                public void done(List<NotificationBean> list, BmobException e) {
-                    Log.d(TAG, "done: ");
+                public void done(List<FloatNotification> list, BmobException e) {
+                    LogUtils.d(TAG, "done: ");
                     if (list != null && !list.isEmpty()) {
                         notificationBean = list.get(0);
-                        Log.d(TAG, "done: " + notificationBean.toString());
+                        LogUtils.d(TAG, "done: " + notificationBean.toString());
                         handler.sendEmptyMessageDelayed(0, notificationBean.getDelayTime());
                     }
                 }
@@ -368,19 +393,6 @@ public class MainActivity extends AppCompatActivity {
             Log.v(TAG, "***ACCESSIBILITY IS DISABLED***");
         }
         return false;
-    }
-
-    private PendingIntent getClickPendingIntent() {
-//        Intent intent = new Intent(this, MyBroatCast.class);
-//        intent.setAction("notification_card");
-//        PendingIntent pendingIntentClick0 = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//        return pendingIntentClick0;
-        Intent intent = new Intent();
-        intent.setAction("android.intent.action.VIEW");
-        Uri content_url = Uri.parse("https://www.baidu.com");
-        intent.setData(content_url);
-        PendingIntent pendingIntentClick0 = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return pendingIntentClick0;
     }
 
     private PendingIntent getDefaultIntent(int flags) {
