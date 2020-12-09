@@ -294,15 +294,22 @@ public class MainActivity extends AppCompatActivity {
         if (imageBitmap != null) {
             mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
         }
-        NotificationCompatColor.AutomationUse(this)
+        NotificationCompatColor notificationCompatColor = NotificationCompatColor.AutomationUse(this);
+        notificationCompatColor
                 .setContentTitleColor(mRemoteViews, R.id.title)
                 .setContentTitleSize(mRemoteViews, R.id.title)
-//                .setContentTextSize(mRemoteViews, R.id.content)
-//                .setContentTextColor(mRemoteViews, R.id.content)
+//                .setContentTextSize(mRemoteViews, R.id.tv_ad)
+//                .setContentTextSize(mRemoteViews, R.id.adtext)
+//                .setContentTextSize(mRemoteViews, R.id.tv_time)
+                .setContentTextColor(mRemoteViews, R.id.tv_ad)
+                .setContentTextColor(mRemoteViews, R.id.adtext)
+                .setContentTextColor(mRemoteViews, R.id.tv_time)
+
 //                .setTitleColor(mRemoteViews, R.id.title)
 //                .setTitleSize(mRemoteViews, R.id.title)
 
         ;
+        LogUtils.d(TAG, "getContentView: " + notificationCompatColor.toString());
         return mRemoteViews;
     }
 

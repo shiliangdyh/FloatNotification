@@ -8,6 +8,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -141,6 +142,9 @@ public class NotificationCompatColor {
      */
     public NotificationCompatColor setContentTextColor(RemoteViews remoteViews, int contentTextIds) {
         remoteViews.setTextColor(contentTextIds, contentTextColor);
+        LogUtils.d(TAG, "setContentTextColor: " + Color.red(contentTextColor));
+        LogUtils.d(TAG, "setContentTextColor: " + Color.green(contentTextColor));
+        LogUtils.d(TAG, "setContentTextColor: " + Color.blue(contentTextColor));
         return this;
     }
 
