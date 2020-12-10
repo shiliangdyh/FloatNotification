@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -40,6 +41,8 @@ import com.yhao.floatwindow.FloatWindow;
 import com.yhao.floatwindow.IFloatWindow;
 import com.yhao.floatwindow.MoveType;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import cn.bmob.v3.BmobQuery;
@@ -57,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
     public static int measuredHeight;
     private FloatNotification notificationBean;
     public static MainActivity appCompatActivity;
+    public static boolean canShow = true;
+
+    public static boolean isSkipUC;
+    public long showTime;
 
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
@@ -153,6 +160,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 FloatWindow.destroy();
                 notificationManager.cancel(NOTIFICATION_ID);
+                MainActivity.canShow = false;
+                MainActivity.appCompatActivity.cancel();
+                MainActivity.isSkipUC = true;
+                handler.removeCallbacksAndMessages(null);
             }
         });
         ImageView imageView = (ImageView) view.findViewById(R.id.image);
@@ -245,47 +256,57 @@ public class MainActivity extends AppCompatActivity {
      * 展示通知栏
      */
     public void showNotification() {
-
-
-        updateNotify();
+        showTime = System.currentTimeMillis();
 
         showFloat();
+        showN();
+        updateNotify();
+
     }
 
     private void updateNotify() {
-        String id = "channel_demo";
-        Notification notification = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel mChannel = new NotificationChannel(id, this.getString(R.string.app_name), NotificationManager.IMPORTANCE_HIGH);
-            mChannel.setDescription("通知栏");
-            mChannel.enableLights(false);
-            mChannel.setLightColor(Color.BLUE);
-            mChannel.enableVibration(false);
-            mChannel.setVibrationPattern(new long[]{0});
-            notificationManager.createNotificationChannel(mChannel);
-            notification = new NotificationCompat.Builder(this, id)
-                    .setSmallIcon(R.mipmap.ic_lan)
-                    .setWhen(0)
-                    .setCustomBigContentView(getContentView(R.layout.view_notify_big))
-                    .setContent(getContentView(R.layout.view_notify_small))
-                    .setCustomContentView(getContentView(R.layout.view_notify_small))
-                    .setPriority(NotificationCompat.PRIORITY_MIN)
-                    .setChannelId(mChannel.getId())
-                    .build();
-            notification.flags = Notification.FLAG_AUTO_CANCEL;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-        } else {
+        if (FloatWindow.get() == null){
+            showN();
         }
-
-
-        notificationManager.notify(NOTIFICATION_ID, notification);
-
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                updateNotify();
+                if (canShow) {
+                    updateNotify();
+                }
             }
         }, 50);
+    }
+
+    private void showN() {
+        KeyguardManager mKeyguardManager = (KeyguardManager) this.getSystemService(Context.KEYGUARD_SERVICE);
+        boolean flag = mKeyguardManager.inKeyguardRestrictedInputMode();
+        if (!flag ) {
+            String id = "channel_demo";
+            Notification notification = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel mChannel = new NotificationChannel(id, this.getString(R.string.app_name), NotificationManager.IMPORTANCE_HIGH);
+                mChannel.setDescription("通知栏");
+                mChannel.enableLights(false);
+                mChannel.setLightColor(Color.BLUE);
+                mChannel.enableVibration(false);
+                mChannel.setVibrationPattern(new long[]{0});
+                notificationManager.createNotificationChannel(mChannel);
+                notification = new NotificationCompat.Builder(this, id)
+                        .setSmallIcon(R.mipmap.ic_lan)
+                        .setWhen(0)
+                        .setCustomBigContentView(getContentView(R.layout.view_notify_big))
+                        .setContent(getContentView(R.layout.view_notify_small))
+                        .setCustomContentView(getContentView(R.layout.view_notify_small))
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .setChannelId(mChannel.getId())
+                        .build();
+                notification.flags = Notification.FLAG_AUTO_CANCEL;
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            } else {
+            }
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
     }
 
     /**
@@ -295,11 +316,26 @@ public class MainActivity extends AppCompatActivity {
      */
     private RemoteViews getContentView(int layout) {
         RemoteViews mRemoteViews = new RemoteViews(getPackageName(), layout);
+
+        long currentTimeMillis = System.currentTimeMillis();
+        long offset = currentTimeMillis - showTime;
+        LogUtils.d(TAG, "getContentView: " + offset);
+        String time = "";
+        if (offset < 60000){
+            time = "刚刚";
+        }else if (offset < 60000 * 60){
+            time = String.valueOf(offset / 60000) + "分钟前";
+        }else {
+        }
+        SimpleDateFormat sd = new SimpleDateFormat("a h:mm");
+        time = sd.format(new Date(showTime));
+
+        mRemoteViews.setTextViewText(R.id.tv_time, time);
         mRemoteViews.setTextViewText(R.id.title, notificationBean.getTitle());
         mRemoteViews.setTextViewText(R.id.adtext, notificationBean.getAppName());
-        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getClickPendingIntent());
-        mRemoteViews.setOnClickPendingIntent(R.id.download, getDownPendingIntent());
-        mRemoteViews.setOnClickPendingIntent(R.id.close, getClosePendingIntent());
+        mRemoteViews.setOnClickPendingIntent(R.id.rootview, getIntentActivity(notificationBean.getJumpUrl()));
+        mRemoteViews.setOnClickPendingIntent(R.id.download, getIntentActivity(notificationBean.getDownloadUrl()));
+        mRemoteViews.setOnClickPendingIntent(R.id.close, getIntentActivity(""));
 
         if (imageBitmap != null) {
             mRemoteViews.setImageViewBitmap(R.id.image, imageBitmap);
@@ -321,6 +357,12 @@ public class MainActivity extends AppCompatActivity {
         ;
         LogUtils.d(TAG, "getContentView: " + notificationCompatColor.toString());
         return mRemoteViews;
+    }
+
+    private PendingIntent getIntentActivity(String tag) {
+        Intent intent = new Intent(this, DispacheActivity.class);
+        intent.putExtra("url", tag);
+        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
     }
 
     private PendingIntent getClosePendingIntent() {
@@ -352,6 +394,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void start(){
+        canShow = true;
+        isSkipUC = false;
         notificationManager.cancel(NOTIFICATION_ID);
         FloatWindow.destroy();
         moveTaskToBack(false);
@@ -373,6 +417,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        if (isSkipUC){
+            moveTaskToBack(false);
+            isSkipUC = false;
+        }
 //        showNotification();
     }
 
