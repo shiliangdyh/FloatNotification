@@ -35,9 +35,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/kuangkuang"
+            android:includeFontPadding="false"
             android:gravity="center"
-            android:paddingLeft="3dp"
-            android:paddingRight="3dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
             android:text="广告"
             android:textColor="#999"
             android:textSize="10sp" />

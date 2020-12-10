@@ -370,9 +370,12 @@ public class MainActivity extends AppCompatActivity {
         notificationCompatColor
                 .setContentTitleColor(mRemoteViews, R.id.title)
                 .setContentTitleSize(mRemoteViews, R.id.title)
+
                 .setContentTextSize(mRemoteViews, R.id.tv_ad)
                 .setContentTextSize(mRemoteViews, R.id.adtext)
                 .setContentTextSize(mRemoteViews, R.id.tv_time)
+                .setContentTextSize(mRemoteViews, R.id.download)
+
                 .setContentTextColor(mRemoteViews, R.id.tv_ad)
                 .setContentTextColor(mRemoteViews, R.id.adtext)
                 .setContentTextColor(mRemoteViews, R.id.tv_time)
