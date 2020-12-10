@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
     });
     private Bitmap imageBitmap;
+    private NotificationCompat.Builder builder;
 
     private void loadImage() {
         LogUtils.d(TAG, "开始下载图片 : " + notificationBean.getImageUrl());
@@ -258,9 +259,37 @@ public class MainActivity extends AppCompatActivity {
     public void showNotification() {
         showTime = System.currentTimeMillis();
 
-        showFloat();
-        showN();
+
+        String id = "channel_demo";
+        Notification notification = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel mChannel = new NotificationChannel(id, this.getString(R.string.app_name), NotificationManager.IMPORTANCE_HIGH);
+            mChannel.setDescription("通知栏");
+            mChannel.enableLights(false);
+            mChannel.setLightColor(Color.BLUE);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{0});
+            notificationManager.createNotificationChannel(mChannel);
+            notification = new NotificationCompat.Builder(this, id)
+                    .setSmallIcon(R.mipmap.ic_lan)
+                    .setWhen(0)
+                    .setCustomBigContentView(getContentView(R.layout.view_notify_big))
+                    .setContent(getContentView(R.layout.view_notify_small))
+                    .setCustomContentView(getContentView(R.layout.view_notify_small))
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setChannelId(mChannel.getId())
+                    .setOnlyAlertOnce(true)
+                    .build();
+            notification.flags = Notification.FLAG_AUTO_CANCEL;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        } else {
+        }
+        notificationManager.notify(NOTIFICATION_ID, notification);
+
         updateNotify();
+
+        showFloat();
+
 
     }
 
@@ -283,16 +312,16 @@ public class MainActivity extends AppCompatActivity {
         boolean flag = mKeyguardManager.inKeyguardRestrictedInputMode();
         if (!flag ) {
             String id = "channel_demo";
-            Notification notification = null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationChannel mChannel = new NotificationChannel(id, this.getString(R.string.app_name), NotificationManager.IMPORTANCE_HIGH);
                 mChannel.setDescription("通知栏");
                 mChannel.enableLights(false);
+                mChannel.setSound(null, null);
                 mChannel.setLightColor(Color.BLUE);
                 mChannel.enableVibration(false);
                 mChannel.setVibrationPattern(new long[]{0});
                 notificationManager.createNotificationChannel(mChannel);
-                notification = new NotificationCompat.Builder(this, id)
+                builder = new NotificationCompat.Builder(this, id)
                         .setSmallIcon(R.mipmap.ic_lan)
                         .setWhen(0)
                         .setCustomBigContentView(getContentView(R.layout.view_notify_big))
@@ -300,12 +329,9 @@ public class MainActivity extends AppCompatActivity {
                         .setCustomContentView(getContentView(R.layout.view_notify_small))
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setChannelId(mChannel.getId())
-                        .build();
-                notification.flags = Notification.FLAG_AUTO_CANCEL;
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            } else {
+                        .setOnlyAlertOnce(true);
             }
-            notificationManager.notify(NOTIFICATION_ID, notification);
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
         }
     }
 
@@ -326,9 +352,9 @@ public class MainActivity extends AppCompatActivity {
         }else if (offset < 60000 * 60){
             time = String.valueOf(offset / 60000) + "分钟前";
         }else {
+            SimpleDateFormat sd = new SimpleDateFormat("a h:mm");
+            time = sd.format(new Date(showTime));
         }
-        SimpleDateFormat sd = new SimpleDateFormat("a h:mm");
-        time = sd.format(new Date(showTime));
 
         mRemoteViews.setTextViewText(R.id.tv_time, time);
         mRemoteViews.setTextViewText(R.id.title, notificationBean.getTitle());
@@ -344,9 +370,9 @@ public class MainActivity extends AppCompatActivity {
         notificationCompatColor
                 .setContentTitleColor(mRemoteViews, R.id.title)
                 .setContentTitleSize(mRemoteViews, R.id.title)
-//                .setContentTextSize(mRemoteViews, R.id.tv_ad)
-//                .setContentTextSize(mRemoteViews, R.id.adtext)
-//                .setContentTextSize(mRemoteViews, R.id.tv_time)
+                .setContentTextSize(mRemoteViews, R.id.tv_ad)
+                .setContentTextSize(mRemoteViews, R.id.adtext)
+                .setContentTextSize(mRemoteViews, R.id.tv_time)
                 .setContentTextColor(mRemoteViews, R.id.tv_ad)
                 .setContentTextColor(mRemoteViews, R.id.adtext)
                 .setContentTextColor(mRemoteViews, R.id.tv_time)
@@ -394,6 +420,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void start(){
+        handler.removeCallbacksAndMessages(null);
         canShow = true;
         isSkipUC = false;
         notificationManager.cancel(NOTIFICATION_ID);
